@@ -1,0 +1,20 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/blackflage10/Desktop/cpp/stl-testing/sorting.cpp
+iostream
+-
+algorithm
+-
+vector
+-
+iterator
+-
+cassert
+-
+
