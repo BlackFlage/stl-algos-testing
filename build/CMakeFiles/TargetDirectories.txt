@@ -1,4 +1,0 @@
-/home/blackflage10/Desktop/cpp/stl-testing/build/CMakeFiles/rebuild_cache.dir
-/home/blackflage10/Desktop/cpp/stl-testing/build/CMakeFiles/edit_cache.dir
-/home/blackflage10/Desktop/cpp/stl-testing/build/CMakeFiles/testing.dir
-/home/blackflage10/Desktop/cpp/stl-testing/build/CMakeFiles/stl-algos.dir
