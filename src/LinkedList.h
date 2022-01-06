@@ -33,14 +33,33 @@ public:
 
         Iterator(Node* ptr) : m_ptr(ptr){}
 
-        T& operator*() const { return m_ptr->m_value; }
-        T* operator->() { return &(m_ptr->m_value); }
+        T& operator*()  const { return m_ptr->m_value; }
+        T* operator->() const { return &(m_ptr->m_value); }
 
         Iterator& operator++() { m_ptr = m_ptr->m_next; return *this; }
         Iterator operator++(int) { Iterator tmp = *this; ++(*this); return tmp; }
 
         friend bool operator==(const Iterator& lhs, const Iterator& rhs) { return lhs.m_ptr == rhs.m_ptr; }
         friend bool operator!=(const Iterator& lhs, const Iterator& rhs) { return !(lhs == rhs); }
+    private:
+        Node* m_ptr;
+    };
+
+    struct ConstIterator
+    {
+        using iterator_category = std::forward_iterator_tag;
+        using difference_type   = std::ptrdiff_t;
+
+        ConstIterator(Node* ptr) : m_ptr(ptr) {}
+
+        const T& operator*()  const { return m_ptr->m_value; }
+        const T* operator->() const { return &(m_ptr->m_value); }
+
+        ConstIterator& operator++() { m_ptr = m_ptr->m_next; return *this; }
+        ConstIterator operator++(int) { ConstIterator tmp = *this; ++(*this); return tmp; }
+
+        friend bool operator==(const ConstIterator& lhs, const ConstIterator& rhs) { return lhs.m_ptr == rhs.m_ptr; }
+        friend bool operator!=(const ConstIterator& lhs, const ConstIterator& rhs) { return !(lhs == rhs); }
     private:
         Node* m_ptr;
     };
@@ -66,8 +85,10 @@ public:
         m_head = nullptr;
     }
 
-    Iterator begin() { return Iterator(m_head); }
-    Iterator end() { return Iterator(nullptr); }
+    Iterator      begin()  const { return Iterator(m_head); }
+    Iterator      end()    const { return Iterator(nullptr); }
+    ConstIterator cbegin() const { return ConstIterator(m_head); }
+    ConstIterator cend()   const { return ConstIterator(nullptr); }
 
     void add(const T& value)
     {

@@ -1,7 +1,6 @@
 //
 // Created by BlackFlage on 01.01.2022.
 //
-
 #include "gtest/gtest.h"
 #include "LinkedList.h"
 
@@ -131,5 +130,21 @@ TEST(IteratorTest, ForwardIterator)
     {
         *it = i * 1350;
         EXPECT_EQ(*it, i * 1350);
+    }
+}
+
+TEST(IteratorTest, ConstForwardIterator)
+{
+    LinkedList<int> linkedList;
+
+    for(int i = 0; i < 10; i++)
+    {
+        linkedList.add(i * 50);
+    }
+
+    int i = 0;
+    for(auto it = linkedList.cbegin(); it != linkedList.cend(); it++, i++)
+    {
+        EXPECT_EQ(*it, i * 50);
     }
 }
