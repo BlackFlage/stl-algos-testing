@@ -26,6 +26,26 @@ private:
     };
 
 public:
+    struct Iterator
+    {
+        using iterator_category = std::forward_iterator_tag;
+        using difference_type   = std::ptrdiff_t;
+
+        Iterator(Node* ptr) : m_ptr(ptr){}
+
+        T& operator*() const { return m_ptr->m_value; }
+        T* operator->() { return &(m_ptr->m_value); }
+
+        Iterator& operator++() { m_ptr = m_ptr->m_next; return *this; }
+        Iterator operator++(int) { Iterator tmp = *this; ++(*this); return tmp; }
+
+        friend bool operator==(const Iterator& lhs, const Iterator& rhs) { return lhs.m_ptr == rhs.m_ptr; }
+        friend bool operator!=(const Iterator& lhs, const Iterator& rhs) { return !(lhs == rhs); }
+    private:
+        Node* m_ptr;
+    };
+
+public:
     LinkedList()
     {
         m_head = nullptr;
@@ -45,6 +65,9 @@ public:
 
         m_head = nullptr;
     }
+
+    Iterator begin() { return Iterator(m_head); }
+    Iterator end() { return Iterator(nullptr); }
 
     void add(const T& value)
     {

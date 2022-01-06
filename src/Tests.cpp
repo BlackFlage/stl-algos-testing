@@ -116,3 +116,20 @@ TEST(RemovingTest, RemoveRandom)
     EXPECT_EQ(linkedList.remove(0), 60);
     EXPECT_EQ(linkedList.size(), 0);
 }
+
+TEST(IteratorTest, ForwardIterator)
+{
+    LinkedList<int> linkedList;
+
+    for(int i = 0; i < 10; i++)
+    {
+        linkedList.add(i * 50);
+    }
+
+    int i = 1;
+    for(auto it = linkedList.begin(); it != linkedList.end(); it++, i++)
+    {
+        *it = i * 1350;
+        EXPECT_EQ(*it, i * 1350);
+    }
+}
