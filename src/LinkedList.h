@@ -8,7 +8,7 @@
 class empty_list_exception : public std::runtime_error
 {
 public:
-    empty_list_exception(const char* message) : std::runtime_error(message) {}
+    empty_list_exception() : std::runtime_error("List is empty.") {}
 };
 
 template<typename T>
@@ -19,10 +19,6 @@ private:
     {
     public:
         Node() = default;
-        ~Node()
-        {
-            delete m_next;
-        }
     public:
         T     m_value;
         Node* m_next;
@@ -33,26 +29,26 @@ public:
     LinkedList()
     {
         m_head = nullptr;
+        m_tail = nullptr;
         m_size = 0;
     }
 
     ~LinkedList()
     {
-        delete m_head;
+        Node* current = m_head;
+        for(int i = 0; i < m_size; i++)
+        {
+            Node* temp = current->m_next;
+            delete current;
+            current = temp;
+        }
+
+        m_head = nullptr;
     }
 
-    void append(const T& value)
+    void add(const T& value)
     {
-        if (!m_head)
-        {
-            m_head = new Node();
-            m_head->m_value = value;
-            m_head->m_next = nullptr;
-            m_head->m_prev = nullptr;
-            m_size++;
-        }
-        else
-            append(&m_head, value);
+        add(value, m_size);
     }
 
     size_t size() const
@@ -60,11 +56,30 @@ public:
         return m_size;
     }
 
+    void add(const T& value, size_t index)
+    {
+        if(index == 0)
+            add_first(value);
+        else if(index == m_size)
+            add_last(value);
+        else if(index > m_size)
+            throw std::out_of_range("Index out of range.");
+        else
+            add(&m_head, value, 0, index);
+    }
+
     void add_first(const T& value)
     {
         if(!m_head)
         {
-            append(value);
+            Node* head    = new Node();
+            head->m_value = value;
+            head->m_next  = nullptr;
+            head->m_prev  = nullptr;
+            m_head        = head;
+            m_tail        = head;
+            m_size++;
+
             return;
         }
 
@@ -77,12 +92,90 @@ public:
         m_size++;
     }
 
-    T& get(size_t index)
+    void add_last(const T& value)
     {
         if(!m_head)
         {
-            throw empty_list_exception("List is empty!");
+            add_first(value);
+            return;
         }
+
+        Node* new_node    = new Node();
+        new_node->m_value = value;
+        new_node->m_next  = nullptr;
+        new_node->m_prev  = m_tail;
+        m_tail->m_next    = new_node;
+        m_tail            = new_node;
+        m_size++;
+    }
+
+    T remove_first()
+    {
+        if(m_size == 0)
+            throw empty_list_exception();
+
+        if(m_size == 1)
+        {
+            T value = m_head->m_value;
+            delete m_head;
+
+            m_head = nullptr;
+            m_tail = nullptr;
+            m_size--;
+
+            return value;
+        }
+
+        T value        = m_head->m_value;
+        Node* head     = m_head;
+        m_head         = head->m_next;
+        head->m_next   = nullptr;
+        m_head->m_prev = nullptr;
+        m_size--;
+
+        delete head;
+
+        return value;
+    }
+
+    T remove_last()
+    {
+        if(m_size == 0)
+            throw empty_list_exception();
+
+        if(m_size == 1)
+            return remove_first();
+
+        T value        = m_tail->m_value;
+        Node* tail     = m_tail;
+        m_tail         = tail->m_prev;
+        tail->m_prev   = nullptr;
+        m_tail->m_next = nullptr;
+        m_size--;
+
+        delete tail;
+
+        return value;
+    }
+
+    T remove(size_t index)
+    {
+        if(index >= m_size)
+            throw std::out_of_range("Index out of range");
+        else if(index == 0)
+            return remove_first();
+        else if(index == m_size - 1)
+            return remove_last();
+
+        return remove(&m_head, 0, index);
+    }
+
+    T& get(size_t index)
+    {
+        if(!m_head)
+            throw empty_list_exception();
+        else if(index >= m_size)
+            throw std::out_of_range("Index out of range.");
 
         try
         {
@@ -94,20 +187,20 @@ public:
         }
     }
 private:
-    void append(Node** node, const T& value)
+    void add(Node** node, const T& value, size_t current_index, size_t dest_index)
     {
-        if((*node)->m_next != nullptr)
+        if(current_index != dest_index)
         {
-            append(&((*node)->m_next), value);
+            add(&((*node)->m_next), value, current_index + 1, dest_index);
             return;
         }
 
-        Node* new_node = new Node();
-
-        new_node->m_value = value;
-        new_node->m_prev  = *node;
-        new_node->m_next  = nullptr;
-        (*node)->m_next   = new_node;
+        Node* new_node          = new Node();
+        new_node->m_value       = value;
+        new_node->m_prev        = (*node)->m_prev;
+        new_node->m_next        = *node;
+        (*node)->m_prev->m_next = new_node;
+        (*node)->m_next->m_prev = new_node;
         m_size++;
     }
 
@@ -124,7 +217,27 @@ private:
             return get(index, node->m_next, current_index + 1);
     }
 
+    T remove(Node** node, size_t current_index, size_t dest_index)
+    {
+        if(current_index != dest_index)
+        {
+            return remove(&((*node)->m_next), current_index + 1, dest_index);
+        }
+
+        T value = (*node)->m_value;
+        Node* old = (*node);
+        (*node) = (*node)->m_next;
+        (*node)->m_prev = (*node)->m_prev->m_prev;
+        (*node)->m_prev->m_next = (*node);
+        m_size--;
+
+        delete old;
+
+        return value;
+    }
+
     Node*  m_head;
+    Node*  m_tail;
     size_t m_size;
 };
 
