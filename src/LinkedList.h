@@ -46,7 +46,7 @@ public:
         using iterator_category = std::forward_iterator_tag;
         using difference_type   = std::ptrdiff_t;
 
-        Iterator(Node* ptr) : m_ptr(ptr){}
+        explicit Iterator(Node* ptr) : m_ptr(ptr){}
 
         T& operator*()  const { return m_ptr->m_value; }
         T* operator->() const { return &(m_ptr->m_value); }
@@ -65,7 +65,7 @@ public:
         using iterator_category = std::forward_iterator_tag;
         using difference_type   = std::ptrdiff_t;
 
-        ConstIterator(Node* ptr) : m_ptr(ptr) {}
+        explicit ConstIterator(Node* ptr) : m_ptr(ptr) {}
 
         const T& operator*()  const { return m_ptr->m_value; }
         const T* operator->() const { return &(m_ptr->m_value); }
@@ -75,6 +75,25 @@ public:
 
         friend bool operator==(const ConstIterator& lhs, const ConstIterator& rhs) { return lhs.m_ptr == rhs.m_ptr; }
         friend bool operator!=(const ConstIterator& lhs, const ConstIterator& rhs) { return !(lhs == rhs); }
+    private:
+        Node* m_ptr;
+    };
+
+    struct ReverseIterator
+    {
+        using iterator_category = std::forward_iterator_tag;
+        using difference_type   = std::ptrdiff_t;
+
+        explicit ReverseIterator(Node* ptr) : m_ptr(ptr) {}
+
+        const T& operator*()  const { return m_ptr->m_value; }
+        const T* operator->() const { return &(m_ptr->m_value); }
+
+        ReverseIterator& operator++() { m_ptr = m_ptr->m_prev; return *this; }
+        ReverseIterator operator++(int) { ReverseIterator tmp = *this; ++(*this); return tmp; }
+
+        friend bool operator==(const ReverseIterator& lhs, const ReverseIterator& rhs) { return lhs.m_ptr == rhs.m_ptr; }
+        friend bool operator!=(const ReverseIterator& lhs, const ReverseIterator& rhs) { return !(lhs == rhs); }
     private:
         Node* m_ptr;
     };
@@ -89,52 +108,33 @@ public:
 
     ~LinkedList()
     {
-        Node* current = m_head;
-        for(int i = 0; i < m_size; i++)
-        {
-            Node* temp = current->m_next;
-            delete current;
-            current = temp;
-        }
-
-        m_head = nullptr;
+        clear();
     }
 
     LinkedList(const LinkedList& other)
     {
         m_head = nullptr;
         m_tail = nullptr;
+        m_size = 0;
 
         *this = other;
     }
 
-    LinkedList(LinkedList&& other)
+    LinkedList(LinkedList&& other) noexcept
     {
         m_head = nullptr;
         m_tail = nullptr;
+        m_size = 0;
 
         *this = std::move(other);
     }
 
     LinkedList& operator=(const LinkedList& other)
     {
-        if(m_head == other.m_head)
+        if(this->m_head == other.m_head)
             return *this;
 
-        if(m_head)
-        {
-            Node* current = m_head;
-            for(int i = 0; i < m_size; i++)
-            {
-                Node* temp = current->m_next;
-                delete current;
-                current = temp;
-            }
-
-            m_head = nullptr;
-            m_tail = nullptr;
-            m_size = 0;
-        }
+        clear();
 
         if(other.m_head)
         {
@@ -166,21 +166,12 @@ public:
         return *this;
     }
 
-    LinkedList& operator=(LinkedList&& other)
+    LinkedList& operator=(LinkedList&& other) noexcept
     {
         if(m_head == other.m_head)
             return *this;
 
-        if(m_head)
-        {
-            Node* current = m_head;
-            for(int i = 0; i < m_size; i++)
-            {
-                Node* temp = current->m_next;
-                delete current;
-                current = temp;
-            }
-        }
+        clear();
 
         m_head = std::exchange(other.m_head, nullptr);
         m_tail = std::exchange(other.m_tail, nullptr);
@@ -194,6 +185,8 @@ public:
     Iterator      end()    const { return Iterator(nullptr); }
     ConstIterator cbegin() const { return ConstIterator(m_head); }
     ConstIterator cend()   const { return ConstIterator(nullptr); }
+    ReverseIterator rbegin() const { return ReverseIterator(m_tail); }
+    ReverseIterator rend() const { return ReverseIterator(nullptr); }
 
     void add(const T& value)
     {
@@ -335,6 +328,94 @@ public:
             throw;
         }
     }
+
+    T& get_first()
+    {
+        if(!m_head)
+            throw empty_list_exception();
+        else
+            return m_head->m_value;
+    }
+
+    T& get_last()
+    {
+        if(!m_tail)
+            throw empty_list_exception();
+        else
+            return m_tail->m_value;
+    }
+
+    Iterator find(const T& value)
+    {
+        auto it = begin();
+        for(; it != end(); it++)
+        {
+            if(*it == value)
+            {
+                return it;
+            }
+        }
+
+        return it;
+    }
+
+    size_t index_of(const T& value)
+    {
+        size_t index = 0;
+        Node* current = m_head;
+        while(current)
+        {
+            if(current->m_value == value)
+                return index;
+
+            current = current->m_next;
+            index++;
+        }
+
+        return -1;
+    }
+
+    T* to_array()
+    {
+        T* arr = new T[m_size];
+
+        size_t i = 0;
+        for(auto it = begin(); it != end(); it++, i++)
+        {
+            arr[i] = (*it);
+        }
+
+        return arr;
+    }
+
+    T poll()
+    {
+        if(!m_head)
+            throw empty_list_exception();
+
+        T value = m_head->m_value;
+        remove_first();
+
+        return value;
+    }
+
+    void clear()
+    {
+        if(m_head)
+        {
+            Node* current = m_head;
+            for(int i = 0; i < m_size; i++)
+            {
+                Node* temp = current->m_next;
+                delete current;
+                current = temp;
+            }
+        }
+
+        m_size = 0;
+        m_head = nullptr;
+        m_tail = nullptr;
+    }
 private:
     void add(Node** node, const T& value, size_t current_index, size_t dest_index)
     {
@@ -356,9 +437,7 @@ private:
     T& get(size_t index, Node* node, size_t current_index)
     {
         if(!node)
-        {
             throw std::out_of_range("Index out of range!");
-        }
 
         if(index == current_index)
             return node->m_value;
@@ -373,10 +452,10 @@ private:
             return remove(&((*node)->m_next), current_index + 1, dest_index);
         }
 
-        T value = (*node)->m_value;
-        Node* old = (*node);
-        (*node) = (*node)->m_next;
-        (*node)->m_prev = (*node)->m_prev->m_prev;
+        T value                 = (*node)->m_value;
+        Node* old               = (*node);
+        (*node)                 = (*node)->m_next;
+        (*node)->m_prev         = (*node)->m_prev->m_prev;
         (*node)->m_prev->m_next = (*node);
         m_size--;
 

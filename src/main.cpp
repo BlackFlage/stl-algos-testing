@@ -1,6 +1,10 @@
 #include <iostream>
 #include "LinkedList.h"
 
+//TODO
+//<algorithm> tests
+//poll
+
 int main()
 {
     LinkedList<int> list;
