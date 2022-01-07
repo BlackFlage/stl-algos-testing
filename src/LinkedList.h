@@ -15,11 +15,26 @@ template<typename T>
 class LinkedList
 {
 private:
-    class Node
+    struct Node
     {
-    public:
-        Node() = default;
-    public:
+        Node()
+        {
+            m_next = nullptr;
+            m_prev = nullptr;
+        }
+
+        Node(const Node& other)
+        {
+            m_value = other.m_value;
+
+            if(other.m_next)
+                m_next = new Node(*other.m_next);
+            else
+                m_next = nullptr;
+
+            m_prev = nullptr;
+        }
+
         T     m_value;
         Node* m_next;
         Node* m_prev;
@@ -83,6 +98,96 @@ public:
         }
 
         m_head = nullptr;
+    }
+
+    LinkedList(const LinkedList& other)
+    {
+        m_head = nullptr;
+        m_tail = nullptr;
+
+        *this = other;
+    }
+
+    LinkedList(LinkedList&& other)
+    {
+        m_head = nullptr;
+        m_tail = nullptr;
+
+        *this = std::move(other);
+    }
+
+    LinkedList& operator=(const LinkedList& other)
+    {
+        if(m_head == other.m_head)
+            return *this;
+
+        if(m_head)
+        {
+            Node* current = m_head;
+            for(int i = 0; i < m_size; i++)
+            {
+                Node* temp = current->m_next;
+                delete current;
+                current = temp;
+            }
+
+            m_head = nullptr;
+            m_tail = nullptr;
+            m_size = 0;
+        }
+
+        if(other.m_head)
+        {
+            m_head = new Node();
+            Node* this_current = m_head;
+            Node* other_current = other.m_head;
+
+            while(other_current)
+            {
+                this_current->m_value = other_current->m_value;
+
+                if(other_current->m_next)
+                {
+                    this_current->m_next = new Node();
+                    this_current->m_next->m_prev = this_current;
+                }
+                else
+                {
+                    this_current->m_next = nullptr;
+                    m_tail = this_current;
+                }
+                this_current = this_current->m_next;
+                other_current = other_current->m_next;
+            }
+
+            m_size = other.m_size;
+        }
+
+        return *this;
+    }
+
+    LinkedList& operator=(LinkedList&& other)
+    {
+        if(m_head == other.m_head)
+            return *this;
+
+        if(m_head)
+        {
+            Node* current = m_head;
+            for(int i = 0; i < m_size; i++)
+            {
+                Node* temp = current->m_next;
+                delete current;
+                current = temp;
+            }
+        }
+
+        m_head = std::exchange(other.m_head, nullptr);
+        m_tail = std::exchange(other.m_tail, nullptr);
+        m_size = other.m_size;
+        other.m_size = 0;
+
+        return *this;
     }
 
     Iterator      begin()  const { return Iterator(m_head); }

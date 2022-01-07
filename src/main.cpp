@@ -9,4 +9,10 @@ int main()
     list.add_first(169);
     list.add(100, 1);
     list.add(89, 2);
+
+    {
+        LinkedList<int> list2(list);
+    }
+
+    list.add(177);
 }

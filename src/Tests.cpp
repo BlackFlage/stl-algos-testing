@@ -148,3 +148,57 @@ TEST(IteratorTest, ConstForwardIterator)
         EXPECT_EQ(*it, i * 50);
     }
 }
+
+TEST(RuleOf5, CopyConstructor)
+{
+    LinkedList<int> list1;
+
+    list1.add(15);
+
+    LinkedList<int> list2(list1);
+
+    ASSERT_EQ(list1.get(0), list2.get(0));
+
+    for(int i = 2; i < 30; i++)
+    {
+        list1.add(i * 15);
+    }
+
+    LinkedList<int> list3(list1);
+    ASSERT_EQ(list1.get(15), list3.get(15));
+    ASSERT_EQ(list1.size(), list3.size());
+}
+
+TEST(RuleOf5, MoveConstructor)
+{
+    LinkedList<int> list1;
+
+    for(int i = 0; i < 10; i++)
+    {
+        list1.add(i * 15);
+    }
+
+    LinkedList<int> list2(std::move(list1));
+
+    EXPECT_EQ(list2.get(0), 0);
+    EXPECT_EQ(list2.get(9), 135);
+    EXPECT_EQ(list2.size(), 10);
+    EXPECT_EQ(list1.size(), 0);
+}
+
+TEST(RuleOf5, AssignmentOperator)
+{
+    LinkedList<int> list1;
+
+    for(int i = 0; i < 10; i++)
+    {
+        list1.add(i * 15);
+    }
+
+    LinkedList<int> list2 = std::move(list1);
+
+    EXPECT_EQ(list2.get(0), 0);
+    EXPECT_EQ(list2.get(9), 135);
+    EXPECT_EQ(list2.size(), 10);
+    EXPECT_EQ(list1.size(), 0);
+}
